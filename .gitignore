@@ -1,0 +1,15 @@
+# Maven
+target/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Environment / secrets - NEVER push these
+application-local.properties
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db

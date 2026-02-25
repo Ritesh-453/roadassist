@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadAssist — My Requests</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        :root {
+            --navy: #0f172a;
+            --navy-mid: #1e293b;
+            --red: #e63946;
+            --red-dark: #c1121f;
+            --grey-bg: #f4f6f9;
+            --grey-text: #64748b;
+            --border: #e2e8f0;
+            --white: #ffffff;
+            --success: #16a34a;
+            --warning: #d97706;
+            --info: #0284c7;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--grey-bg); min-height: 100vh; }
+
+        /* Navbar */
+        .navbar {
+            background: var(--navy);
+            padding: 0 30px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .nav-brand { font-family: 'Syne', sans-serif; font-size: 20px; color: var(--white); display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
+        .brand-highlight { color: var(--red); }
+        .nav-tag { background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; color: #94a3b8; letter-spacing: 1px; text-transform: uppercase; font-family: 'DM Sans', sans-serif; }
+        .nav-right {
+            display: flex; align-items: center; gap: 14px;
+        }
+        .nav-user {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .nav-user strong { color: var(--white); }
+        .btn-logout {
+            background: rgba(230,57,70,0.15);
+            color: var(--red);
+            border: 1px solid rgba(230,57,70,0.3);
+            padding: 7px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { background: var(--red); color: var(--white); }
+
+        /* Page content */
+        .page { padding: 28px 30px; max-width: 1300px; margin: 0 auto; }
+
+        /* Section heading */
+        .section-header {
+            display: flex; align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .section-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            color: var(--navy);
+            letter-spacing: -0.3px;
+        }
+        .section-header .line {
+            flex: 1; height: 1px;
+            background: var(--border);
+        }
+
+        /* Top grid: form + map */
+        .top-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            color: var(--navy);
+            margin-bottom: 18px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .field-group { margin-bottom: 14px; }
+        .field-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--grey-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .field-group input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--navy);
+            background: var(--grey-bg);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .field-group input:focus {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(230,57,70,0.08);
+            background: var(--white);
+        }
+        .location-hint {
+            font-size: 12px;
+            color: var(--grey-text);
+            margin-bottom: 4px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        #location-display {
+            font-size: 12px;
+            color: var(--info);
+            font-weight: 500;
+            min-height: 18px;
+            margin-bottom: 14px;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: var(--red);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-submit:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(230,57,70,0.25); }
+
+        /* Map */
+        #map {
+            height: 100%;
+            min-height: 300px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+        }
+
+        /* Table */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; min-width: 700px; border-collapse: collapse; }
+        thead tr {
+            background: var(--navy);
+        }
+        thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #f8fafc; }
+        tbody td {
+            padding: 13px 16px;
+            font-size: 13px;
+            color: var(--navy-mid);
+            white-space: nowrap;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-accepted { background: #dbeafe; color: #1e40af; }
+        .badge-completed { background: #dcfce7; color: #166534; }
+
+        .btn-details {
+            background: transparent;
+            color: var(--info);
+            border: 1px solid #bfdbfe;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.15s;
+        }
+        .btn-details:hover { background: #eff6ff; }
+
+        /* Overlays */
+        .overlay {
+            display: none;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15,23,42,0.6);
+            z-index: 999;
+            justify-content: center; align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(2px);
+        }
+        .overlay.show { display: flex; }
+
+        /* Submit popup */
+        .success-popup {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 40px 36px;
+            text-align: center;
+            max-width: 360px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .success-icon {
+            width: 64px; height: 64px;
+            background: #dcfce7;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 20px auto;
+        }
+        .success-popup h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            color: var(--navy);
+            margin-bottom: 8px;
+        }
+        .success-popup p { font-size: 14px; color: var(--grey-text); margin-bottom: 24px; line-height: 1.6; }
+        .btn-ok {
+            width: 100%;
+            padding: 12px;
+            background: var(--navy);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s;
+        }
+        .btn-ok:hover { background: var(--navy-mid); }
+
+        /* Mechanic popup */
+        .mechanic-popup {
+            background: var(--white);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .mechanic-popup-header {
+            background: var(--navy);
+            padding: 20px 24px;
+            border-radius: 16px 16px 0 0;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .mechanic-popup-header h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 17px;
+            color: var(--white);
+        }
+        .btn-close {
+            background: rgba(255,255,255,0.1);
+            border: none; color: white;
+            width: 30px; height: 30px;
+            border-radius: 6px; cursor: pointer;
+            font-size: 16px; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .mechanic-body { padding: 24px; }
+        .info-row {
+            display: flex; align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            gap: 12px;
+        }
+        .info-row:last-of-type { border-bottom: none; }
+        .info-icon {
+            width: 34px; height: 34px;
+            background: var(--navy);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700;
+            color: #94a3b8;
+            flex-shrink: 0;
+            font-family: 'DM Sans', sans-serif;
+            letter-spacing: 0.3px;
+        }
+        .info-content { flex: 1; }
+        .info-label { font-size: 11px; font-weight: 600; color: var(--grey-text); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+        .info-value { font-size: 14px; color: var(--navy); font-weight: 500; }
+        #detailsMap { height: 200px; border-radius: 10px; margin-top: 16px; border: 1px solid var(--border); }
+        .no-map-msg { text-align: center; padding: 16px; font-size: 13px; color: var(--grey-text); }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .navbar { padding: 0 16px; }
+            .page { padding: 16px; }
+            .top-grid { grid-template-columns: 1fr; }
+            #map { min-height: 250px; }
+            .nav-user { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="nav-brand">
+        RoadAssist
+    </div>
+    <div class="nav-right">
+        <span class="nav-user">Logged in as <strong id="user"></strong></span>
+        <button class="btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+</nav>
+
+<div class="page">
+
+    <!-- Submit Request + Map -->
+    <div class="section-header">
+        <h2>Submit a Request</h2>
+        <div class="line"></div>
+    </div>
+    <div class="top-grid">
+        <div class="card">
+            <div class="card-title">Breakdown Details</div>
+            <div class="field-group">
+                <label>Vehicle Number</label>
+                <input type="text" id="vehicle" placeholder="e.g. MH12 AB1234">
+            </div>
+            <div class="field-group">
+                <label>Issue Description</label>
+                <input type="text" id="issue" placeholder="e.g. Flat tyre, engine failure...">
+            </div>
+            <div class="field-group">
+                <label>Phone Number</label>
+                <input type="tel" id="phone" placeholder="e.g. 9876543210">
+            </div>
+            <p class="location-hint">Click on the map to pin your location</p>
+            <p id="location-display"></p>
+            <button class="btn-submit" onclick="submitRequest()">Submit Request</button>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <!-- Requests Table -->
+    <div class="section-header">
+        <h2>Your Requests</h2>
+        <div class="line"></div>
+    </div>
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-wrapper">
+            <table id="requestTable">
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Vehicle</th><th>Issue</th><th>Phone</th>
+                        <th>Location</th><th>Status</th><th>Submitted At</th><th>Mechanic</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Success Popup -->
+<div class="overlay" id="submitOverlay">
+    <div class="success-popup">
+        <div class="success-icon" style="font-size:28px;color:#16a34a;">✓</div>
+        <h3>Request Submitted!</h3>
+        <p>Your breakdown request has been sent. Our team will assign a mechanic shortly.</p>
+        <button class="btn-ok" onclick="closeSubmitPopup()">Got it</button>
+    </div>
+</div>
+
+<!-- Mechanic Details Popup -->
+<div class="overlay" id="mechanicOverlay">
+    <div class="mechanic-popup">
+        <div class="mechanic-popup-header">
+            <h3>Mechanic Details</h3>
+            <button class="btn-close" onclick="closeMechanicPopup()">✕</button>
+        </div>
+        <div class="mechanic-body">
+            <div class="info-row">
+                <div class="info-icon">N</div>
+                <div class="info-content">
+                    <div class="info-label">Mechanic Name</div>
+                    <div class="info-value" id="d-name">—</div>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon">P</div>
+                <div class="info-content">
+                    <div class="info-label">Phone</div>
+                    <div class="info-value" id="d-phone">—</div>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon">T</div>
+                <div class="info-content">
+                    <div class="info-label">Estimated Arrival</div>
+                    <div class="info-value" id="d-eta">—</div>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon">L</div>
+                <div class="info-content">
+                    <div class="info-label">Starting Location</div>
+                    <div class="info-value" id="d-loc">—</div>
+                </div>
+            </div>
+            <div id="detailsMap"></div>
+            <p class="no-map-msg" id="noMapMsg" style="display:none;">Location not shared by admin.</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    const username = localStorage.getItem("username");
+    const role = localStorage.getItem("role");
+    if (!username || role !== "CUSTOMER") { alert("Access denied!"); window.location.href = "index.html"; }
+    document.getElementById("user").innerText = username;
+
+    let latitude = 0, longitude = 0;
+    const map = L.map('map').setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+
+    let marker = null;
+    map.on('click', function(e) {
+        latitude = e.latlng.lat; longitude = e.latlng.lng;
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([latitude, longitude]).addTo(map)
+            .bindPopup(`📍 ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`).openPopup();
+        document.getElementById("location-display").innerText = `Selected: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+    });
+
+    function fetchRequests() {
+        fetch(`http://localhost:8082/api/requests/customer/${username}`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.querySelector("#requestTable tbody");
+                tbody.innerHTML = "";
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding: 30px;">No requests submitted yet.</td></tr>`;
+                    return;
+                }
+                data.forEach(req => {
+                    const sc = req.status === "Pending" ? "badge-pending" : req.status === "Accepted" ? "badge-accepted" : "badge-completed";
+                    let mechanicCell = '<span style="color:#cbd5e1;">—</span>';
+                    if ((req.status === "Accepted" || req.status === "Completed") && req.mechanicName) {
+                        mechanicCell = `<button class="btn-details" onclick='showMechanicDetails(${JSON.stringify(req)})'>View Details</button>`;
+                    }
+                    tbody.innerHTML += `<tr>
+                        <td style="color:#94a3b8; font-size:12px;">#${req.id}</td>
+                        <td><strong>${req.vehicleNumber}</strong></td>
+                        <td>${req.issue}</td>
+                        <td>${req.phone || "N/A"}</td>
+                        <td style="color:#94a3b8;">${req.latitude ? req.latitude.toFixed(4) + ', ' + req.longitude.toFixed(4) : 'N/A'}</td>
+                        <td><span class="badge ${sc}">${req.status}</span></td>
+                        <td style="color:#94a3b8;">${new Date(req.createdAt).toLocaleString()}</td>
+                        <td>${mechanicCell}</td>
+                    </tr>`;
+                });
+            })
+            .catch(() => alert("Failed to load requests."));
+    }
+
+    function submitRequest() {
+        const vehicle = document.getElementById("vehicle").value.trim();
+        const issue = document.getElementById("issue").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        if (!vehicle || !issue || !phone) { alert("Please fill all fields!"); return; }
+        if (!latitude || !longitude) { alert("Please click on the map to select your location!"); return; }
+        fetch("http://localhost:8082/api/requests", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ customerName: username, vehicleNumber: vehicle, issue, phone, latitude, longitude })
+        })
+        .then(res => res.json())
+        .then(() => {
+            document.getElementById("vehicle").value = "";
+            document.getElementById("issue").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("location-display").innerText = "";
+            latitude = 0; longitude = 0;
+            if (marker) { map.removeLayer(marker); marker = null; }
+            document.getElementById("submitOverlay").classList.add("show");
+            fetchRequests();
+        })
+        .catch(() => alert("Failed to submit request."));
+    }
+
+    function closeSubmitPopup() { document.getElementById("submitOverlay").classList.remove("show"); }
+
+    let detailsMapInstance = null;
+    function showMechanicDetails(req) {
+        document.getElementById("d-name").innerText = req.mechanicName || "—";
+        document.getElementById("d-phone").innerText = req.mechanicPhone || "—";
+        document.getElementById("d-eta").innerText = req.estimatedArrival || "—";
+        const hasLoc = req.mechanicLatitude && req.mechanicLongitude;
+        document.getElementById("d-loc").innerText = hasLoc
+            ? `${parseFloat(req.mechanicLatitude).toFixed(4)}, ${parseFloat(req.mechanicLongitude).toFixed(4)}`
+            : "Not shared";
+        document.getElementById("detailsMap").style.display = hasLoc ? "block" : "none";
+        document.getElementById("noMapMsg").style.display = hasLoc ? "none" : "block";
+        document.getElementById("mechanicOverlay").classList.add("show");
+        setTimeout(() => {
+            if (detailsMapInstance) { detailsMapInstance.remove(); detailsMapInstance = null; }
+            if (hasLoc) {
+                const lat = parseFloat(req.mechanicLatitude), lng = parseFloat(req.mechanicLongitude);
+                detailsMapInstance = L.map('detailsMap').setView([lat, lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(detailsMapInstance);
+                L.marker([lat, lng]).addTo(detailsMapInstance).bindPopup("🔧 Mechanic").openPopup();
+            }
+        }, 100);
+    }
+
+    function closeMechanicPopup() {
+        document.getElementById("mechanicOverlay").classList.remove("show");
+        if (detailsMapInstance) { detailsMapInstance.remove(); detailsMapInstance = null; }
+    }
+
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
+    fetchRequests();
+</script>
+</body>
+</html>

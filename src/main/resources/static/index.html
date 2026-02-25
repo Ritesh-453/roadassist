@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadAssist — Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0f172a;
+            --navy-mid: #1e293b;
+            --red: #e63946;
+            --red-dark: #c1121f;
+            --grey-bg: #f4f6f9;
+            --grey-text: #64748b;
+            --border: #e2e8f0;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: var(--grey-bg);
+        }
+
+        /* Left panel */
+        .left-panel {
+            flex: 1;
+            background: var(--navy);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            width: 400px; height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(230,57,70,0.18) 0%, transparent 70%);
+            top: -80px; right: -80px;
+        }
+        .left-panel::after {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(230,57,70,0.12) 0%, transparent 70%);
+            bottom: -60px; left: -60px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 60px;
+            position: relative; z-index: 1;
+        }
+        .brand-icon {
+            width: 44px; height: 44px;
+            background: var(--red);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+            font-family: 'Syne', sans-serif;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+        .brand-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            color: var(--white);
+            letter-spacing: -0.3px;
+        }
+        .left-content { position: relative; z-index: 1; }
+        .left-content h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 42px;
+            color: var(--white);
+            line-height: 1.15;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        .left-content h1 span { color: var(--red); }
+        .left-content p {
+            font-size: 16px;
+            color: #94a3b8;
+            line-height: 1.7;
+            max-width: 360px;
+        }
+        .feature-list {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+        .feature-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--red);
+            flex-shrink: 0;
+        }
+
+        /* Right panel */
+        .right-panel {
+            width: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: var(--white);
+        }
+        .login-box { width: 100%; max-width: 360px; }
+        .login-box h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 28px;
+            color: var(--navy);
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+        .login-box .subtitle {
+            font-size: 14px;
+            color: var(--grey-text);
+            margin-bottom: 36px;
+        }
+        .field-group { margin-bottom: 18px; }
+        .field-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--navy-mid);
+            margin-bottom: 7px;
+            letter-spacing: 0.2px;
+        }
+        .field-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--navy);
+            background: var(--grey-bg);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+        .field-group input:focus {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(230,57,70,0.1);
+            background: var(--white);
+        }
+        .btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 6px;
+        }
+        .btn-primary {
+            background: var(--red);
+            color: var(--white);
+        }
+        .btn-primary:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(230,57,70,0.3); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-secondary {
+            background: transparent;
+            color: var(--navy);
+            border: 1.5px solid var(--border);
+            margin-top: 10px;
+        }
+        .btn-secondary:hover { border-color: var(--navy-mid); background: var(--grey-bg); }
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: var(--grey-text);
+            font-size: 13px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        #status {
+            margin-top: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            min-height: 20px;
+            border-radius: 6px;
+            padding: 8px 12px;
+        }
+        #status.error { background: #fff0f0; color: var(--red); }
+        #status.success { background: #f0fdf4; color: #16a34a; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .left-panel { display: none; }
+            .right-panel { width: 100%; padding: 30px 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Left Panel -->
+<div class="left-panel">
+    <div class="brand">
+        <div class="brand-icon">RA</div>
+        <span class="brand-name">RoadAssist</span>
+    </div>
+    <div class="left-content">
+        <h1>Roadside help,<br><span>when it matters.</span></h1>
+        <p>A smart platform connecting stranded drivers with nearby mechanics — fast, reliable, and trackable.</p>
+        <div class="feature-list">
+            <div class="feature-item"><div class="feature-dot"></div>Submit breakdown requests in seconds</div>
+            <div class="feature-item"><div class="feature-dot"></div>Track your request status in real-time</div>
+            <div class="feature-item"><div class="feature-dot"></div>Know your mechanic before they arrive</div>
+        </div>
+    </div>
+</div>
+
+<!-- Right Panel -->
+<div class="right-panel">
+    <div class="login-box">
+        <h2>Welcome back</h2>
+        <p class="subtitle">Sign in to your account to continue</p>
+
+        <div class="field-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Enter your username" autocomplete="username">
+        </div>
+        <div class="field-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
+        </div>
+
+        <button class="btn btn-primary" onclick="login()">Sign In</button>
+        <div class="divider">or</div>
+        <button class="btn btn-secondary" onclick="register()">Create New Account</button>
+
+        <div id="status"></div>
+    </div>
+</div>
+
+<script>
+function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    if (!username || !password) { showStatus("Please enter username and password.", "error"); return; }
+    fetch("http://localhost:8082/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => { if (res.status === 200) return res.json(); else throw new Error("Invalid username or password."); })
+    .then(user => {
+        localStorage.setItem("username", user.username);
+        localStorage.setItem("role", user.role);
+        window.location.href = user.role === "ADMIN" ? "admin.html" : "customer.html";
+    })
+    .catch(err => showStatus(err.message, "error"));
+}
+
+function register() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    if (!username || !password) { showStatus("Please enter username and password.", "error"); return; }
+    fetch("http://localhost:8082/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => res.text())
+    .then(msg => showStatus(msg, "success"))
+    .catch(() => showStatus("Registration failed. Try again.", "error"));
+}
+
+function showStatus(msg, type) {
+    const el = document.getElementById("status");
+    el.innerText = msg;
+    el.className = type;
+}
+</script>
+</body>
+</html>

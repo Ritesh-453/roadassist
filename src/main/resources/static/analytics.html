@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadAssist — Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --navy: #0f172a;
+            --navy-mid: #1e293b;
+            --red: #e63946;
+            --red-dark: #c1121f;
+            --grey-bg: #f4f6f9;
+            --grey-text: #64748b;
+            --border: #e2e8f0;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--grey-bg); min-height: 100vh; }
+
+        /* Navbar */
+        .navbar {
+            background: var(--navy); padding: 0 30px; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .nav-brand { font-family: 'Syne', sans-serif; font-size: 20px; color: var(--white); display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
+        .brand-highlight { color: var(--red); }
+        .nav-tag { background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; color: #94a3b8; letter-spacing: 1px; text-transform: uppercase; font-family: 'DM Sans', sans-serif; }
+        .nav-actions { display: flex; gap: 10px; }
+        .btn-nav {
+            padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+            cursor: pointer; font-family: 'DM Sans', sans-serif; border: none; transition: all 0.2s;
+        }
+        .btn-back { background: rgba(255,255,255,0.08); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.15); }
+        .btn-back:hover { background: rgba(255,255,255,0.15); color: white; }
+        .btn-logout { background: rgba(230,57,70,0.15); color: var(--red); border: 1px solid rgba(230,57,70,0.3); }
+        .btn-logout:hover { background: var(--red); color: white; }
+
+        .page { padding: 28px 30px; max-width: 1300px; margin: 0 auto; }
+
+        /* Filter bar */
+        .filter-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 20px 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            display: flex; align-items: center;
+            gap: 16px; flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .filter-card label { font-size: 12px; font-weight: 600; color: var(--grey-text); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+        .filter-card input[type="datetime-local"] {
+            padding: 9px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--navy);
+            background: var(--grey-bg);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .filter-card input[type="datetime-local"]:focus { border-color: var(--red); }
+        .btn-load {
+            padding: 9px 22px;
+            background: var(--red); color: white;
+            border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .btn-load:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(230,57,70,0.25); }
+
+        /* Content grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* Section header */
+        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .section-header h2 { font-family: 'Syne', sans-serif; font-size: 17px; color: var(--navy); }
+        .section-header .line { flex: 1; height: 1px; background: var(--border); }
+
+        /* Table */
+        .card { background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden; }
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; min-width: 650px; border-collapse: collapse; }
+        thead tr { background: var(--navy); }
+        thead th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+        tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #f8fafc; }
+        tbody td { padding: 12px 16px; font-size: 13px; color: var(--navy-mid); white-space: nowrap; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-accepted { background: #dbeafe; color: #1e40af; }
+        .badge-completed { background: #dcfce7; color: #166534; }
+
+        /* Chart card */
+        .chart-card {
+            background: var(--white);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            padding: 24px;
+            position: sticky;
+            top: 80px;
+        }
+        .chart-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px; color: var(--navy);
+            margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        #pieChart { max-height: 260px; }
+        .chart-empty {
+            text-align: center; padding: 40px 20px;
+            color: var(--grey-text); font-size: 13px;
+        }
+        .chart-empty .emoji { font-size: 32px; display: block; margin-bottom: 10px; }
+
+        /* Legend */
+        .legend { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .legend-item { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .legend-left { display: flex; align-items: center; gap: 8px; color: var(--navy-mid); }
+        .legend-val { font-weight: 600; color: var(--navy); }
+
+        @media (max-width: 900px) {
+            .content-grid { grid-template-columns: 1fr; }
+            .chart-card { position: static; }
+        }
+        @media (max-width: 600px) {
+            .navbar { padding: 0 16px; }
+            .page { padding: 16px; }
+            .filter-card { padding: 16px; }
+            .filter-card input[type="datetime-local"] { width: 100%; }
+            .btn-load { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-brand">RoadAssist</div>
+    <div class="nav-actions">
+        <button class="btn-nav btn-back" onclick="window.location.href='admin.html'">⬅ Back to Admin</button>
+        <button class="btn-nav btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+</nav>
+
+<div class="page">
+
+    <!-- Filter bar -->
+    <div class="filter-card">
+        <label>From</label>
+        <input type="datetime-local" id="from">
+        <label>To</label>
+        <input type="datetime-local" id="to">
+        <button class="btn-load" onclick="loadAnalytics()">Load Report</button>
+    </div>
+
+    <!-- Main content -->
+    <div class="content-grid">
+
+        <!-- Table side -->
+        <div>
+            <div class="section-header">
+                <h2>Requests in Range</h2>
+                <div class="line"></div>
+            </div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table id="analyticsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Customer</th><th>Phone</th>
+                                <th>Vehicle</th><th>Issue</th><th>Status</th><th>Submitted At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:30px;">Select a date range and click Load Report.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart side -->
+        <div>
+            <div class="section-header">
+                <h2>Status Breakdown</h2>
+                <div class="line"></div>
+            </div>
+            <div class="chart-card">
+                <h3>Request Distribution</h3>
+                <div id="chartArea">
+                    <div class="chart-empty">
+                        <span class="emoji"></span>
+                        Load a date range to see the chart.
+                    </div>
+                </div>
+                <div class="legend" id="legend" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const role = localStorage.getItem("role");
+    if (!role || role !== "ADMIN") { alert("Access denied!"); window.location.href = "index.html"; }
+
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
+
+    function loadAnalytics() {
+        const fromInput = document.getElementById('from').value;
+        const toInput = document.getElementById('to').value;
+        if (!fromInput || !toInput) { alert('Please select both From and To dates.'); return; }
+        const from = fromInput + ":00";
+        const to = toInput + ":59";
+
+        // Load table
+        fetch(`http://localhost:8082/api/requests/analytics?from=${from}&to=${to}`)
+            .then(res => { if (!res.ok) throw new Error("Failed to fetch"); return res.json(); })
+            .then(data => {
+                const tbody = document.querySelector("#analyticsTable tbody");
+                tbody.innerHTML = "";
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:30px;">No records found for selected range.</td></tr>`;
+                    showEmptyChart();
+                    return;
+                }
+                data.forEach(item => {
+                    const sc = item.status === "Pending" ? "badge-pending" : item.status === "Accepted" ? "badge-accepted" : "badge-completed";
+                    tbody.innerHTML += `<tr>
+                        <td style="color:#94a3b8; font-size:12px;">#${item.id}</td>
+                        <td><strong>${item.customerName}</strong></td>
+                        <td>${item.phone || 'N/A'}</td>
+                        <td>${item.vehicleNumber}</td>
+                        <td>${item.issue}</td>
+                        <td><span class="badge ${sc}">${item.status}</span></td>
+                        <td style="color:#94a3b8;">${new Date(item.createdAt).toLocaleString()}</td>
+                    </tr>`;
+                });
+            })
+            .catch(err => alert("Error: " + err.message));
+
+        // Load chart
+        fetch(`http://localhost:8082/api/requests/analytics/counts?from=${from}&to=${to}`)
+            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+            .then(data => {
+                if (!data || Object.keys(data).length === 0) { showEmptyChart(); return; }
+                drawChart(data);
+            })
+            .catch(() => showEmptyChart());
+    }
+
+    let pieChartInstance = null;
+    const colorMap = { "Pending": "#f59e0b", "Accepted": "#3b82f6", "Completed": "#22c55e" };
+
+    function drawChart(data) {
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+        const total = values.reduce((a, b) => a + b, 0);
+        const colors = labels.map(l => colorMap[l] || "#94a3b8");
+
+        document.getElementById("chartArea").innerHTML = '<canvas id="pieChart"></canvas>';
+        if (pieChartInstance) { pieChartInstance.destroy(); }
+
+        const ctx = document.getElementById('pieChart').getContext('2d');
+        pieChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: values, backgroundColor: colors, borderWidth: 3, borderColor: '#ffffff', hoverBorderWidth: 4 }]
+            },
+            options: {
+                cutout: '60%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const pct = total ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                return ` ${context.label}: ${context.raw} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Custom legend
+        const legend = document.getElementById("legend");
+        legend.style.display = "flex";
+        legend.innerHTML = labels.map((label, i) => {
+            const pct = total ? ((values[i] / total) * 100).toFixed(1) : 0;
+            return `<div class="legend-item">
+                <div class="legend-left">
+                    <div class="legend-dot" style="background:${colors[i]};"></div>
+                    <span>${label}</span>
+                </div>
+                <span class="legend-val">${values[i]} <span style="color:#94a3b8; font-weight:400;">(${pct}%)</span></span>
+            </div>`;
+        }).join('');
+    }
+
+    function showEmptyChart() {
+        if (pieChartInstance) { pieChartInstance.destroy(); pieChartInstance = null; }
+        document.getElementById("chartArea").innerHTML = `<div class="chart-empty"><span class="emoji"></span>No data for selected range.</div>`;
+        document.getElementById("legend").style.display = "none";
+    }
+</script>
+</body>
+</html>
