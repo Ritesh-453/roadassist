@@ -65,7 +65,7 @@ public class ServiceRequestController {
         req.setStatus("Accepted");
         req.setMechanicName(body.get("mechanicName"));
         req.setMechanicPhone(body.get("mechanicPhone"));
-        req.setEstimatedArrival(body.get("estimatedArrival"));
+        req.setMechanicEta(body.get("estimatedArrival"));
 
         // Mechanic location (optional - may be null if not provided)
         if (body.get("mechanicLatitude") != null && !body.get("mechanicLatitude").isEmpty()) {
