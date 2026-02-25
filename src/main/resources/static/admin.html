@@ -236,7 +236,7 @@
     let mechanicMapInstance = null, mechanicMarker = null;
 
     function fetchRequests() {
-        fetch("http://localhost:8082/api/requests")
+        fetch("https://roadassist-production.up.railway.app/api/requests")
             .then(res => res.json())
             .then(data => {
                 const tbody = document.querySelector("#adminTable tbody");
@@ -310,7 +310,7 @@
         const phone = document.getElementById("mPhone").value.trim();
         const eta = document.getElementById("mETA").value.trim();
         if (!name || !phone || !eta) { alert("Please fill in all mechanic details!"); return; }
-        fetch(`http://localhost:8082/api/requests/${currentRequestId}/accept`, {
+        fetch(`https://roadassist-production.up.railway.app/api/requests/${currentRequestId}/accept`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ mechanicName: name, mechanicPhone: phone, estimatedArrival: eta, mechanicLatitude: mechanicLat ? String(mechanicLat) : "", mechanicLongitude: mechanicLng ? String(mechanicLng) : "" })
@@ -321,7 +321,7 @@
     }
 
     function updateStatus(id, status) {
-        fetch(`http://localhost:8082/api/requests/${id}/status`, {
+        fetch(`https://roadassist-production.up.railway.app/api/requests/${id}/status`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status })

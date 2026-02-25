@@ -228,7 +228,7 @@
         const to = toInput + ":59";
 
         // Load table
-        fetch(`http://localhost:8082/api/requests/analytics?from=${from}&to=${to}`)
+        fetch(`https://roadassist-production.up.railway.app/api/requests/analytics?from=${from}&to=${to}`)
             .then(res => { if (!res.ok) throw new Error("Failed to fetch"); return res.json(); })
             .then(data => {
                 const tbody = document.querySelector("#analyticsTable tbody");
@@ -254,7 +254,7 @@
             .catch(err => alert("Error: " + err.message));
 
         // Load chart
-        fetch(`http://localhost:8082/api/requests/analytics/counts?from=${from}&to=${to}`)
+        fetch(`https://roadassist-production.up.railway.app/api/requests/analytics/counts?from=${from}&to=${to}`)
             .then(res => { if (!res.ok) throw new Error(); return res.json(); })
             .then(data => {
                 if (!data || Object.keys(data).length === 0) { showEmptyChart(); return; }
