@@ -225,15 +225,12 @@ function logout() { localStorage.clear(); window.location.href = "index.html"; }
 fetchRequests();
 
 function formatIST(dtStr) {
-  // Server stores UTC — add 330 minutes (5h30m) to get IST
-  const utc = new Date(dtStr);
-  const ist = new Date(utc.getTime() + 330 * 60000);
-  const dd = String(ist.getUTCDate()).padStart(2,'0');
-  const mm = String(ist.getUTCMonth()+1).padStart(2,'0');
-  const yyyy = ist.getUTCFullYear();
-  const hh = String(ist.getUTCHours()).padStart(2,'0');
-  const min = String(ist.getUTCMinutes()).padStart(2,'0');
-  return dd+'/'+mm+'/'+yyyy+', '+hh+':'+min;
+  // String has no Z — browser already treats it as local (IST)
+  // Just parse the raw string directly
+  const p = dtStr.split('T');
+  const date = p[0].split('-');
+  const time = p[1].split(':');
+  return date[2]+'/'+date[1]+'/'+date[0]+', '+time[0]+':'+time[1];
 }
 </script>
 </body>
