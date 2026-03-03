@@ -500,14 +500,10 @@ function closeMech() {
 function logout() { localStorage.clear(); window.location.href = "index.html"; }
 fetchReqs();
 
-function formatIST(dtStr) {
-  // String has no Z — browser already treats it as local (IST)
-  // Just parse the raw string directly
-  const p = dtStr.split('T');
-  const date = p[0].split('-');
-  const time = p[1].split(':');
-  return date[2]+'/'+date[1]+'/'+date[0]+', '+time[0]+':'+time[1];
-}
+const t = "2026-03-03T12:17:32.620864";
+const utc = new Date(t + 'Z');
+const ist = new Date(utc.getTime() + 330 * 60000);
+console.log(ist.getUTCHours() + ":" + ist.getUTCMinutes());
 </script>
 </body>
 </html>
