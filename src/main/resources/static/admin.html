@@ -225,13 +225,14 @@ function logout() { localStorage.clear(); window.location.href = "index.html"; }
 fetchRequests();
 
 function formatIST(dtStr) {
-  // Server saves time as IST already — parse directly without any conversion
-  const d = new Date(dtStr);
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const yyyy = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2,'0');
-  const min = String(d.getMinutes()).padStart(2,'0');
+  // Server stores UTC — add 330 minutes (5h30m) to get IST
+  const utc = new Date(dtStr);
+  const ist = new Date(utc.getTime() + 330 * 60000);
+  const dd = String(ist.getUTCDate()).padStart(2,'0');
+  const mm = String(ist.getUTCMonth()+1).padStart(2,'0');
+  const yyyy = ist.getUTCFullYear();
+  const hh = String(ist.getUTCHours()).padStart(2,'0');
+  const min = String(ist.getUTCMinutes()).padStart(2,'0');
   return dd+'/'+mm+'/'+yyyy+', '+hh+':'+min;
 }
 </script>
