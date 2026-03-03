@@ -59,11 +59,19 @@ body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;background:v
 .success-box h3{font-family:'Syne',sans-serif;font-size:22px;color:var(--navy);margin-bottom:8px}
 .success-box p{font-size:14px;color:var(--grey-text);margin-bottom:24px;line-height:1.6}
 .success-box button{width:100%;padding:12px;background:var(--navy);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
-@media(max-width:768px){.left{display:none}.right{width:100%;padding:30px 20px}}
+.mobile-topbar{display:none;align-items:center;gap:10px;padding:16px 20px;background:var(--navy);position:sticky;top:0;z-index:10}
+.mobile-topbar .brand-icon{width:36px;height:36px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;font-family:'Syne',sans-serif;color:white}
+.mobile-topbar .brand-name{font-family:'Syne',sans-serif;font-size:18px;color:var(--white);letter-spacing:-0.3px}
+@media(max-width:768px){.left{display:none}.right{width:100%;padding:24px 20px}.mobile-topbar{display:flex}}
+@media(max-width:420px){.right{padding:20px 16px}.form-title{font-size:22px}.btn{font-size:14px;padding:11px}.fg input{font-size:16px}}
 @media(max-width:420px){.right{padding:24px 16px}.form-title{font-size:22px}.btn{font-size:14px;padding:11px}.fg input{font-size:16px}}
 </style>
 </head>
 <body>
+<div class="mobile-topbar">
+  <div class="brand-icon">RA</div>
+  <span class="brand-name">RoadAssist</span>
+</div>
 <div class="left">
   <div class="brand">
     <div class="brand-icon">RA</div>

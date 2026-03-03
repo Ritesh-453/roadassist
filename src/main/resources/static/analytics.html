@@ -169,7 +169,7 @@ function loadReport() {
       // Populate table
       data.forEach(item => {
         const sc = item.status === "Pending" ? "bp" : item.status === "Accepted" ? "ba" : "bc";
-        const ist = new Date(item.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true });
+        const ist = new Date(item.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
         tb.innerHTML += '<tr>'
           + '<td style="color:#94a3b8;font-size:12px">#' + item.id + '</td>'
           + '<td><strong>' + item.customerName + '</strong></td>'
