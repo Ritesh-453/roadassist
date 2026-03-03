@@ -224,10 +224,16 @@ function goToAnalytics() { window.location.href = "analytics.html"; }
 function logout() { localStorage.clear(); window.location.href = "index.html"; }
 fetchRequests();
 
-const t = "2026-03-03T12:17:32.620864";
-const utc = new Date(t + 'Z');
-const ist = new Date(utc.getTime() + 330 * 60000);
-console.log(ist.getUTCHours() + ":" + ist.getUTCMinutes());
+function formatIST(dtStr) {
+  const utc = new Date(dtStr + 'Z');
+  const ist = new Date(utc.getTime() + 330 * 60000);
+  const dd = String(ist.getUTCDate()).padStart(2,'0');
+  const mm = String(ist.getUTCMonth()+1).padStart(2,'0');
+  const yyyy = ist.getUTCFullYear();
+  const hh = String(ist.getUTCHours()).padStart(2,'0');
+  const min = String(ist.getUTCMinutes()).padStart(2,'0');
+  return dd+'/'+mm+'/'+yyyy+', '+hh+':'+min;
+}
 </script>
 </body>
 </html>
