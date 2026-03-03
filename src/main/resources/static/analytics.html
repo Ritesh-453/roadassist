@@ -169,7 +169,7 @@ function loadReport() {
       // Populate table
       data.forEach(item => {
         const sc = item.status === "Pending" ? "bp" : item.status === "Accepted" ? "ba" : "bc";
-        const ist = new Date(item.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        const ist = formatIST(item.createdAt);
         tb.innerHTML += '<tr>'
           + '<td style="color:#94a3b8;font-size:12px">#' + item.id + '</td>'
           + '<td><strong>' + item.customerName + '</strong></td>'
@@ -345,6 +345,19 @@ function downloadPDF() {
   const fileName = 'RoadAssist_Report_' + fromDisp.replace(/[: ]/g,'_') + '.pdf';
   doc.save(fileName);
   btn.innerText = 'Download PDF Report'; btn.disabled = false;
+}
+
+function formatIST(dtStr) {
+  const d = new Date(dtStr);
+  // Convert to IST (UTC+5:30) by adding 5h30m to UTC time
+  const utcMs = d.getTime() + d.getTimezoneOffset() * 60000;
+  const ist = new Date(utcMs + (5*60+30)*60000);
+  const dd = String(ist.getDate()).padStart(2,'0');
+  const mm = String(ist.getMonth()+1).padStart(2,'0');
+  const yyyy = ist.getFullYear();
+  const hh = String(ist.getHours()).padStart(2,'0');
+  const min = String(ist.getMinutes()).padStart(2,'0');
+  return dd+'/'+mm+'/'+yyyy+', '+hh+':'+min;
 }
 </script>
 </body>

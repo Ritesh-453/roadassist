@@ -317,54 +317,34 @@ function openMapPopup() {
   document.getElementById('confirmLocBtn').disabled = true;
   setTimeout(() => {
     if (popupMapInst) { popupMapInst.remove(); popupMapInst = null; popupMkr = null; }
+    // India strict bounds
+    const IND = { minLat: 6.5, maxLat: 35.5, minLng: 68.1, maxLng: 97.4 };
+    const indiaBounds = [[IND.minLat, IND.minLng], [IND.maxLat, IND.maxLng]];
+
     popupMapInst = L.map('popupMap', {
       minZoom: 4,
-      maxBounds: [[6.0, 67.0], [36.0, 98.0]],
+      maxBounds: indiaBounds,
       maxBoundsViscosity: 1.0
     }).setView([20.5937, 78.9629], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(popupMapInst);
 
-    // Shade outside-India area using a simplified polygon of India
-    // Outer box minus India = grey overlay so user knows to click inside
-    const indiaApproxPolygon = [
-      [8.4, 77.5],[8.1, 76.9],[8.3, 76.3],[9.5, 76.3],[10.0, 77.0],[10.5, 78.1],
-      [11.4, 79.8],[12.6, 80.2],[13.6, 80.1],[14.7, 80.0],[15.9, 80.6],[17.0, 82.3],
-      [18.2, 83.7],[19.3, 84.7],[20.3, 85.8],[20.9, 86.7],[21.5, 87.1],[22.0, 88.1],
-      [22.3, 88.9],[22.6, 88.5],[23.6, 88.7],[24.3, 88.0],[24.5, 88.3],[25.2, 89.8],
-      [26.0, 90.4],[26.5, 91.2],[26.6, 92.1],[27.0, 91.7],[27.5, 91.4],[27.9, 91.7],
-      [28.0, 92.5],[28.6, 93.6],[28.2, 94.7],[28.6, 95.4],[29.1, 95.5],[29.6, 94.8],
-      [29.9, 94.2],[29.4, 93.0],[30.0, 92.0],[30.7, 91.5],[31.5, 91.6],[32.5, 92.1],
-      [33.0, 91.9],[33.4, 90.7],[34.0, 88.0],[35.5, 77.5],[35.0, 75.3],[34.5, 73.9],
-      [33.2, 73.8],[32.5, 72.3],[31.7, 70.9],[31.0, 69.6],[28.5, 68.1],[26.5, 68.1],
-      [24.4, 67.9],[23.7, 68.4],[22.8, 68.9],[22.3, 68.7],[21.1, 69.2],[20.7, 70.1],
-      [20.9, 71.0],[21.7, 72.6],[21.5, 72.9],[20.6, 72.9],[20.0, 73.0],[19.2, 73.1],
-      [18.5, 72.9],[17.3, 73.3],[16.4, 73.5],[15.3, 73.9],[14.8, 74.1],[14.1, 74.4],
-      [13.3, 74.6],[12.5, 74.9],[11.8, 75.5],[11.2, 75.7],[10.5, 76.1],[9.5, 76.3],
-      [8.4, 77.5]
-    ];
-
-    // Draw India boundary
-    const indiaPoly = L.polygon(indiaApproxPolygon, {
-      color: '#e63946', weight: 2, fill: true,
-      fillColor: 'transparent', fillOpacity: 0,
-      dashArray: '6,3'
+    // Draw India rectangle border
+    L.rectangle(indiaBounds, {
+      color: '#e63946', weight: 2, fill: false, dashArray: '6,4'
     }).addTo(popupMapInst);
 
-    // Add subtle grey overlay outside India using inverted polygon
-    const outerBounds = [[90, -180],[-90, -180],[-90, 180],[90, 180]];
-    L.polygon([outerBounds, indiaApproxPolygon], {
-      color: 'none', fillColor: '#0f172a', fillOpacity: 0.3, stroke: false
-    }).addTo(popupMapInst);
+    // Grey overlay outside India rectangle
+    const outer = [[90,-180],[-90,-180],[-90,180],[90,180]];
+    const hole = [[IND.minLat,IND.minLng],[IND.maxLat,IND.minLng],[IND.maxLat,IND.maxLng],[IND.minLat,IND.maxLng]];
+    L.polygon([outer, hole], { color:'none', fillColor:'#0f172a', fillOpacity:0.35, stroke:false }).addTo(popupMapInst);
 
     popupMapInst.on('click', e => {
       const la = e.latlng.lat, ln = e.latlng.lng;
-
-      // Point-in-polygon check using ray casting for India polygon
-      if (!isInsideIndia(la, ln)) {
-        // Show tooltip instead of alert
-        const tooltip = L.popup({ closeButton: false, className: 'india-warn' })
+      // Strict rectangle check
+      if (la < IND.minLat || la > IND.maxLat || ln < IND.minLng || ln > IND.maxLng) {
+        L.popup({ closeButton: false })
           .setLatLng(e.latlng)
-          .setContent('<div style="font-size:12px;font-weight:600;color:#e63946">Please select a location within India</div>')
+          .setContent('<div style="font-size:12px;font-weight:600;color:#e63946;padding:2px 4px">Please select a location within India</div>')
           .openOn(popupMapInst);
         setTimeout(() => popupMapInst.closePopup(), 2000);
         return;
@@ -376,38 +356,6 @@ function openMapPopup() {
       document.getElementById('confirmLocBtn').disabled = false;
     });
   }, 150);
-}
-
-// Ray casting algorithm - point in polygon
-function isInsideIndia(lat, lng) {
-  // Polygon stored as [lng, lat] - simplified India border
-  const poly = [
-    [77.5,8.4],[76.9,8.1],[76.3,8.3],[76.3,9.5],[77.0,10.0],[78.1,10.5],
-    [79.8,11.4],[80.2,12.6],[80.1,13.6],[80.0,14.7],[80.6,15.9],[82.3,17.0],
-    [83.7,18.2],[84.7,19.3],[85.8,20.3],[86.7,20.9],[87.1,21.5],[88.1,22.0],
-    [88.9,22.3],[88.5,22.6],[88.7,23.6],[88.0,24.3],[88.3,24.5],[89.8,25.2],
-    [90.4,26.0],[91.2,26.5],[92.1,26.6],[91.7,27.0],[91.4,27.5],[91.7,27.9],
-    [92.5,28.0],[93.6,28.6],[94.7,28.2],[95.4,28.6],[95.5,29.1],[94.8,29.6],
-    [94.2,29.9],[93.0,29.4],[92.0,30.0],[91.5,30.7],[91.6,31.5],[92.1,32.5],
-    [91.9,33.0],[90.7,33.4],[88.0,34.0],[77.5,35.5],[75.3,35.0],[73.9,34.5],
-    [73.8,33.2],[72.3,32.5],[70.9,31.7],[69.6,31.0],[68.1,28.5],[68.1,26.5],
-    [67.9,24.4],[68.4,23.7],[68.9,22.8],[68.7,22.3],[69.2,21.1],[70.1,20.7],
-    [71.0,20.9],[72.6,21.7],[72.9,21.5],[72.9,20.6],[73.0,20.0],[73.1,19.2],
-    [72.9,18.5],[73.3,17.3],[73.5,16.4],[73.9,15.3],[74.1,14.8],[74.4,14.1],
-    [74.6,13.3],[74.9,12.5],[75.5,11.8],[75.7,11.2],[76.1,10.5],[76.3,9.5],
-    [77.5,8.4]
-  ];
-  // Ray casting: x=lng, y=lat
-  const x = lng, y = lat;
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const xi = poly[i][0], yi = poly[i][1];
-    const xj = poly[j][0], yj = poly[j][1];
-    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
-      inside = !inside;
-    }
-  }
-  return inside;
 }
 
 function closeMapPopup() {
@@ -506,7 +454,7 @@ function fetchReqs() {
       let mc = '<span style="color:#cbd5e1">-</span>';
       if ((req.status === "Accepted" || req.status === "Completed") && req.mechanicName)
         mc = '<button class="btn-det" onclick=\'showMech(' + JSON.stringify(req) + ')\'>View Details</button>';
-      const ist = new Date(req.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      const ist = formatIST(req.createdAt);
       tb.innerHTML += '<tr>'
         + '<td style="color:#94a3b8;font-size:12px">#' + req.id + '</td>'
         + '<td><strong>' + req.vehicleNumber + '</strong></td>'
@@ -551,6 +499,19 @@ function closeMech() {
 
 function logout() { localStorage.clear(); window.location.href = "index.html"; }
 fetchReqs();
+
+function formatIST(dtStr) {
+  const d = new Date(dtStr);
+  // Convert to IST (UTC+5:30) by adding 5h30m to UTC time
+  const utcMs = d.getTime() + d.getTimezoneOffset() * 60000;
+  const ist = new Date(utcMs + (5*60+30)*60000);
+  const dd = String(ist.getDate()).padStart(2,'0');
+  const mm = String(ist.getMonth()+1).padStart(2,'0');
+  const yyyy = ist.getFullYear();
+  const hh = String(ist.getHours()).padStart(2,'0');
+  const min = String(ist.getMinutes()).padStart(2,'0');
+  return dd+'/'+mm+'/'+yyyy+', '+hh+':'+min;
+}
 </script>
 </body>
 </html>
