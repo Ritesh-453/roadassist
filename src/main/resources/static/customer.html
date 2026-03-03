@@ -501,15 +501,13 @@ function logout() { localStorage.clear(); window.location.href = "index.html"; }
 fetchReqs();
 
 function formatIST(dtStr) {
+  // Server saves time as IST already — parse directly without any conversion
   const d = new Date(dtStr);
-  // Convert to IST (UTC+5:30) by adding 5h30m to UTC time
-  const utcMs = d.getTime() + d.getTimezoneOffset() * 60000;
-  const ist = new Date(utcMs + (5*60+30)*60000);
-  const dd = String(ist.getDate()).padStart(2,'0');
-  const mm = String(ist.getMonth()+1).padStart(2,'0');
-  const yyyy = ist.getFullYear();
-  const hh = String(ist.getHours()).padStart(2,'0');
-  const min = String(ist.getMinutes()).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const min = String(d.getMinutes()).padStart(2,'0');
   return dd+'/'+mm+'/'+yyyy+', '+hh+':'+min;
 }
 </script>
