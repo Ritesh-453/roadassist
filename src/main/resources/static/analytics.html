@@ -1,323 +1,351 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoadAssist — Analytics</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --navy: #0f172a;
-            --navy-mid: #1e293b;
-            --red: #e63946;
-            --red-dark: #c1121f;
-            --grey-bg: #f4f6f9;
-            --grey-text: #64748b;
-            --border: #e2e8f0;
-            --white: #ffffff;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--grey-bg); min-height: 100vh; }
-
-        /* Navbar */
-        .navbar {
-            background: var(--navy); padding: 0 30px; height: 60px;
-            display: flex; align-items: center; justify-content: space-between;
-            position: sticky; top: 0; z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        .nav-brand { font-family: 'Syne', sans-serif; font-size: 20px; color: var(--white); display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
-        .brand-highlight { color: var(--red); }
-        .nav-tag { background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; color: #94a3b8; letter-spacing: 1px; text-transform: uppercase; font-family: 'DM Sans', sans-serif; }
-        .nav-actions { display: flex; gap: 10px; }
-        .btn-nav {
-            padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
-            cursor: pointer; font-family: 'DM Sans', sans-serif; border: none; transition: all 0.2s;
-        }
-        .btn-back { background: rgba(255,255,255,0.08); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.15); }
-        .btn-back:hover { background: rgba(255,255,255,0.15); color: white; }
-        .btn-logout { background: rgba(230,57,70,0.15); color: var(--red); border: 1px solid rgba(230,57,70,0.3); }
-        .btn-logout:hover { background: var(--red); color: white; }
-
-        .page { padding: 28px 30px; max-width: 1300px; margin: 0 auto; }
-
-        /* Filter bar */
-        .filter-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 20px 24px;
-            border: 1px solid var(--border);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            display: flex; align-items: center;
-            gap: 16px; flex-wrap: wrap;
-            margin-bottom: 24px;
-        }
-        .filter-card label { font-size: 12px; font-weight: 600; color: var(--grey-text); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-        .filter-card input[type="datetime-local"] {
-            padding: 9px 14px;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: 13px;
-            font-family: 'DM Sans', sans-serif;
-            color: var(--navy);
-            background: var(--grey-bg);
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .filter-card input[type="datetime-local"]:focus { border-color: var(--red); }
-        .btn-load {
-            padding: 9px 22px;
-            background: var(--red); color: white;
-            border: none; border-radius: 8px;
-            font-size: 13px; font-weight: 600;
-            cursor: pointer; font-family: 'DM Sans', sans-serif;
-            transition: all 0.2s; white-space: nowrap;
-        }
-        .btn-load:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(230,57,70,0.25); }
-
-        /* Content grid */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 20px;
-            align-items: start;
-        }
-
-        /* Section header */
-        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-        .section-header h2 { font-family: 'Syne', sans-serif; font-size: 17px; color: var(--navy); }
-        .section-header .line { flex: 1; height: 1px; background: var(--border); }
-
-        /* Table */
-        .card { background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden; }
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; min-width: 650px; border-collapse: collapse; }
-        thead tr { background: var(--navy); }
-        thead th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-        tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-        tbody tr:last-child { border-bottom: none; }
-        tbody tr:hover { background: #f8fafc; }
-        tbody td { padding: 12px 16px; font-size: 13px; color: var(--navy-mid); white-space: nowrap; }
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .badge-pending { background: #fef3c7; color: #92400e; }
-        .badge-accepted { background: #dbeafe; color: #1e40af; }
-        .badge-completed { background: #dcfce7; color: #166534; }
-
-        /* Chart card */
-        .chart-card {
-            background: var(--white);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            padding: 24px;
-            position: sticky;
-            top: 80px;
-        }
-        .chart-card h3 {
-            font-family: 'Syne', sans-serif;
-            font-size: 15px; color: var(--navy);
-            margin-bottom: 20px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        #pieChart { max-height: 260px; }
-        .chart-empty {
-            text-align: center; padding: 40px 20px;
-            color: var(--grey-text); font-size: 13px;
-        }
-        .chart-empty .emoji { font-size: 32px; display: block; margin-bottom: 10px; }
-
-        /* Legend */
-        .legend { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .legend-item { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
-        .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-        .legend-left { display: flex; align-items: center; gap: 8px; color: var(--navy-mid); }
-        .legend-val { font-weight: 600; color: var(--navy); }
-
-        @media (max-width: 900px) {
-            .content-grid { grid-template-columns: 1fr; }
-            .chart-card { position: static; }
-        }
-        @media (max-width: 600px) {
-            .navbar { padding: 0 16px; }
-            .page { padding: 16px; }
-            .filter-card { padding: 16px; }
-            .filter-card input[type="datetime-local"] { width: 100%; }
-            .btn-load { width: 100%; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoadAssist — Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--navy:#0f172a;--navy-mid:#1e293b;--red:#e63946;--red-dark:#c1121f;--grey-bg:#f4f6f9;--grey-text:#64748b;--border:#e2e8f0;--white:#ffffff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--grey-bg);min-height:100vh}
+.navbar{background:var(--navy);padding:0 30px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.brand-mark{width:32px;height:32px;background:var(--red);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;flex-shrink:0;font-family:'Syne',sans-serif}
+.nav-brand{font-family:'Syne',sans-serif;font-size:20px;color:var(--white);letter-spacing:-.5px;display:flex;align-items:center;gap:10px}
+.nav-brand{font-family:'Syne',sans-serif;font-size:20px;color:var(--white);letter-spacing:-.5px}
+.nav-actions{display:flex;gap:10px}
+.btn-nav{padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all .2s}
+.btn-back{background:rgba(255,255,255,.08);color:#cbd5e1;border:1px solid rgba(255,255,255,.15)}
+.btn-back:hover{background:rgba(255,255,255,.15);color:white}
+.btn-logout{background:rgba(230,57,70,.15);color:var(--red);border:1px solid rgba(230,57,70,.3)}
+.btn-logout:hover{background:var(--red);color:white}
+.page{padding:28px 30px;max-width:1300px;margin:0 auto}
+.filter-card{background:var(--white);border-radius:12px;padding:20px 24px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.filter-card label{font-size:12px;font-weight:600;color:var(--grey-text);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.filter-card input[type="datetime-local"]{padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--navy);background:var(--grey-bg);outline:none;transition:border-color .2s}
+.filter-card input[type="datetime-local"]:focus{border-color:var(--red)}
+.btn-load{padding:9px 22px;background:var(--red);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap}
+.btn-load:hover{background:var(--red-dark);transform:translateY(-1px)}
+.btn-load:disabled{background:#94a3b8;cursor:not-allowed;transform:none}
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sh h2{font-family:'Syne',sans-serif;font-size:17px;color:var(--navy)}
+.sh .line{flex:1;height:1px;background:var(--border)}
+.content-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+.card{background:var(--white);border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden}
+.chart-card{background:var(--white);border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);padding:24px}
+.chart-card h3{font-family:'Syne',sans-serif;font-size:15px;color:var(--navy);margin-bottom:20px}
+.charts-col{display:flex;flex-direction:column;gap:20px}
+.tw{overflow-x:auto}
+table{width:100%;min-width:650px;border-collapse:collapse}
+thead tr{background:var(--navy)}
+thead th{padding:11px 16px;text-align:left;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:hover{background:#f8fafc}
+tbody td{padding:12px 16px;font-size:13px;color:var(--navy-mid);white-space:nowrap}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.bp{background:#fef3c7;color:#92400e}.ba{background:#dbeafe;color:#1e40af}.bc{background:#dcfce7;color:#166534}
+.empty{text-align:center;padding:40px 20px;color:var(--grey-text);font-size:13px}
+.legend{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.li{display:flex;align-items:center;justify-content:space-between;font-size:13px}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ll{display:flex;align-items:center;gap:8px;color:var(--navy-mid)}
+.lv{font-weight:600;color:var(--navy)}
+canvas{max-height:220px}
+@media(max-width:900px){.content-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.navbar{padding:0 16px}.page{padding:16px}.filter-card{padding:16px;flex-direction:column;align-items:stretch}.filter-card input[type="datetime-local"]{width:100%}.btn-load{width:100%}}
+@media print{.navbar,.filter-card,#pdfBar,.nav-actions{display:none!important}.page{padding:0}.content-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-
 <nav class="navbar">
-    <div class="nav-brand">RoadAssist</div>
-    <div class="nav-actions">
-        <button class="btn-nav btn-back" onclick="window.location.href='admin.html'">⬅ Back to Admin</button>
-        <button class="btn-nav btn-logout" onclick="logout()">Sign Out</button>
-    </div>
+  <div class="nav-brand"><div class="brand-mark">RA</div>RoadAssist</div>
+  <div class="nav-actions">
+    <button class="btn-nav btn-back" onclick="window.location.href='admin.html'">Back to Admin</button>
+    <button class="btn-nav btn-logout" onclick="logout()">Sign Out</button>
+  </div>
 </nav>
-
 <div class="page">
-
-    <!-- Filter bar -->
-    <div class="filter-card">
-        <label>From</label>
-        <input type="datetime-local" id="from">
-        <label>To</label>
-        <input type="datetime-local" id="to">
-        <button class="btn-load" onclick="loadAnalytics()">Load Report</button>
-    </div>
-
-    <!-- Main content -->
-    <div class="content-grid">
-
-        <!-- Table side -->
-        <div>
-            <div class="section-header">
-                <h2>Requests in Range</h2>
-                <div class="line"></div>
-            </div>
-            <div class="card">
-                <div class="table-wrapper">
-                    <table id="analyticsTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th><th>Customer</th><th>Phone</th>
-                                <th>Vehicle</th><th>Issue</th><th>Status</th><th>Submitted At</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:30px;">Select a date range and click Load Report.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+  <div class="filter-card">
+    <label>From</label>
+    <input type="datetime-local" id="dtFrom">
+    <label>To</label>
+    <input type="datetime-local" id="dtTo">
+    <button class="btn-load" id="loadBtn" onclick="loadReport()">Load Report</button>
+  </div>
+  <div id="pdfBar" style="display:none;background:var(--white);border-radius:12px;padding:16px 20px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:20px;display:none;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <div>
+    <div style="font-family:'Syne',sans-serif;font-size:15px;color:var(--navy);font-weight:700" id="pdfTitle">Analytics Report</div>
+    <div style="font-size:12px;color:var(--grey-text);margin-top:3px" id="pdfSubtitle"></div>
+  </div>
+  <button id="pdfBtn" onclick="downloadPDF()" style="display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--navy);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='var(--navy)'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download PDF Report
+  </button>
+</div>
+<div class="content-grid">
+    <div>
+      <div class="sh"><h2>Requests in Range</h2><div class="line"></div></div>
+      <div class="card">
+        <div class="tw">
+          <table id="atbl">
+            <thead><tr><th>ID</th><th>Customer</th><th>Phone</th><th>Vehicle</th><th>Issue</th><th>Status</th><th>Submitted (IST)</th></tr></thead>
+            <tbody><tr><td colspan="7" class="empty">Select a date range and click Load Report.</td></tr></tbody>
+          </table>
         </div>
-
-        <!-- Chart side -->
-        <div>
-            <div class="section-header">
-                <h2>Status Breakdown</h2>
-                <div class="line"></div>
-            </div>
-            <div class="chart-card">
-                <h3>Request Distribution</h3>
-                <div id="chartArea">
-                    <div class="chart-empty">
-                        <span class="emoji"></span>
-                        Load a date range to see the chart.
-                    </div>
-                </div>
-                <div class="legend" id="legend" style="display:none;"></div>
-            </div>
-        </div>
+      </div>
     </div>
+    <div class="charts-col">
+      <div>
+        <div class="sh"><h2>Status Breakdown</h2><div class="line"></div></div>
+        <div class="chart-card">
+          <h3>Request Distribution</h3>
+          <div id="statusChartDiv"><div class="empty">Load a date range to see chart.</div></div>
+          <div class="legend" id="statusLegend" style="display:none"></div>
+        </div>
+      </div>
+      <div>
+        <div class="sh"><h2>Issues Breakdown</h2><div class="line"></div></div>
+        <div class="chart-card">
+          <h3>Most Common Issues</h3>
+          <div id="issueChartDiv"><div class="empty">Load a date range to see chart.</div></div>
+          <div class="legend" id="issueLegend" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-    const role = localStorage.getItem("role");
-    if (!role || role !== "ADMIN") { alert("Access denied!"); window.location.href = "index.html"; }
+const API = "https://roadassist-production.up.railway.app";
+const role = localStorage.getItem("role");
+if (!role || role !== "ADMIN") { alert("Access denied!"); window.location.href = "index.html"; }
+function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
-    function logout() { localStorage.clear(); window.location.href = "index.html"; }
+let statusInst = null, issueInst = null;
+const STATUS_COLORS = { "Pending": "#f59e0b", "Accepted": "#3b82f6", "Completed": "#22c55e" };
+const ISSUE_COLORS = ["#e63946","#0284c7","#16a34a","#d97706","#7c3aed","#db2777","#0891b2","#65a30d","#ea580c","#6366f1","#64748b"];
 
-    function loadAnalytics() {
-        const fromInput = document.getElementById('from').value;
-        const toInput = document.getElementById('to').value;
-        if (!fromInput || !toInput) { alert('Please select both From and To dates.'); return; }
-        const from = fromInput + ":00";
-        const to = toInput + ":59";
+function loadReport() {
+  const fromVal = document.getElementById('dtFrom').value;
+  const toVal = document.getElementById('dtTo').value;
 
-        // Load table
-        fetch(`https://roadassist-production.up.railway.app/api/requests/analytics?from=${from}&to=${to}`)
-            .then(res => { if (!res.ok) throw new Error("Failed to fetch"); return res.json(); })
-            .then(data => {
-                const tbody = document.querySelector("#analyticsTable tbody");
-                tbody.innerHTML = "";
-                if (data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:30px;">No records found for selected range.</td></tr>`;
-                    showEmptyChart();
-                    return;
-                }
-                data.forEach(item => {
-                    const sc = item.status === "Pending" ? "badge-pending" : item.status === "Accepted" ? "badge-accepted" : "badge-completed";
-                    tbody.innerHTML += `<tr>
-                        <td style="color:#94a3b8; font-size:12px;">#${item.id}</td>
-                        <td><strong>${item.customerName}</strong></td>
-                        <td>${item.phone || 'N/A'}</td>
-                        <td>${item.vehicleNumber}</td>
-                        <td>${item.issue}</td>
-                        <td><span class="badge ${sc}">${item.status}</span></td>
-                        <td style="color:#94a3b8;">${new Date(item.createdAt).toLocaleString()}</td>
-                    </tr>`;
-                });
-            })
-            .catch(err => alert("Error: " + err.message));
+  if (!fromVal || !toVal) { alert('Please select both From and To dates.'); return; }
 
-        // Load chart
-        fetch(`https://roadassist-production.up.railway.app/api/requests/analytics/counts?from=${from}&to=${to}`)
-            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
-            .then(data => {
-                if (!data || Object.keys(data).length === 0) { showEmptyChart(); return; }
-                drawChart(data);
-            })
-            .catch(() => showEmptyChart());
+  // Build proper ISO datetime strings and encode them
+  const fromStr = encodeURIComponent(fromVal + ":00");
+  const toStr   = encodeURIComponent(toVal + ":59");
+
+  const btn = document.getElementById('loadBtn');
+  btn.disabled = true;
+  btn.innerText = "Loading...";
+
+  fetch(API + "/api/requests/analytics?from=" + fromStr + "&to=" + toStr)
+    .then(r => {
+      if (!r.ok) throw new Error("Server error: " + r.status);
+      return r.json();
+    })
+    .then(data => {
+      btn.disabled = false; btn.innerText = "Load Report";
+
+      const tb = document.querySelector("#atbl tbody");
+      tb.innerHTML = "";
+
+      // Show PDF bar
+      const fromDisp = document.getElementById('dtFrom').value.replace('T',' ');
+      const toDisp = document.getElementById('dtTo').value.replace('T',' ');
+      document.getElementById('pdfSubtitle').innerText = fromDisp + '  →  ' + toDisp + '  |  ' + data.length + ' record(s)';
+      document.getElementById('pdfBar').style.display = 'flex';
+
+      if (!data.length) {
+        tb.innerHTML = '<tr><td colspan="7" class="empty">No records found for selected range.</td></tr>';
+        clearChart('statusChartDiv', 'statusLegend');
+        clearChart('issueChartDiv', 'issueLegend');
+        return;
+      }
+
+      // Populate table
+      data.forEach(item => {
+        const sc = item.status === "Pending" ? "bp" : item.status === "Accepted" ? "ba" : "bc";
+        const ist = new Date(item.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true });
+        tb.innerHTML += '<tr>'
+          + '<td style="color:#94a3b8;font-size:12px">#' + item.id + '</td>'
+          + '<td><strong>' + item.customerName + '</strong></td>'
+          + '<td>' + (item.phone || 'N/A') + '</td>'
+          + '<td>' + item.vehicleNumber + '</td>'
+          + '<td>' + item.issue + '</td>'
+          + '<td><span class="badge ' + sc + '">' + item.status + '</span></td>'
+          + '<td style="color:#94a3b8">' + ist + '</td>'
+          + '</tr>';
+      });
+
+      // Status chart
+      const statusData = {};
+      data.forEach(d => { statusData[d.status] = (statusData[d.status] || 0) + 1; });
+      drawChart('statusChartDiv', 'statusLegend', statusData, STATUS_COLORS, 'statusInst');
+
+      // Issues chart — sort by count, top 10
+      const issueData = {};
+      data.forEach(d => { issueData[d.issue] = (issueData[d.issue] || 0) + 1; });
+      const topIssues = Object.fromEntries(
+        Object.entries(issueData).sort((a, b) => b[1] - a[1]).slice(0, 10)
+      );
+      drawChart('issueChartDiv', 'issueLegend', topIssues, null, 'issueInst');
+    })
+    .catch(err => {
+      btn.disabled = false; btn.innerText = "Load Report";
+      alert("Failed to load: " + err.message);
+    });
+}
+
+function drawChart(divId, legendId, data, colorMap, instKey) {
+  const labels = Object.keys(data);
+  const values = Object.values(data);
+  const total = values.reduce((a, b) => a + b, 0);
+  const colors = colorMap
+    ? labels.map(l => colorMap[l] || "#94a3b8")
+    : ISSUE_COLORS.slice(0, labels.length);
+
+  // Destroy old chart if exists
+  if (instKey === 'statusInst' && statusInst) { statusInst.destroy(); statusInst = null; }
+  if (instKey === 'issueInst'  && issueInst)  { issueInst.destroy();  issueInst = null;  }
+
+  document.getElementById(divId).innerHTML = '<canvas id="cvs_' + divId + '"></canvas>';
+  const ctx = document.getElementById('cvs_' + divId).getContext('2d');
+
+  const inst = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{ data: values, backgroundColor: colors, borderWidth: 3, borderColor: '#ffffff', hoverBorderWidth: 4 }]
+    },
+    options: {
+      cutout: '60%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: c => ' ' + c.label + ': ' + c.raw + ' (' + (total ? ((c.raw / total) * 100).toFixed(1) : 0) + '%)'
+          }
+        }
+      }
     }
+  });
 
-    let pieChartInstance = null;
-    const colorMap = { "Pending": "#f59e0b", "Accepted": "#3b82f6", "Completed": "#22c55e" };
+  if (instKey === 'statusInst') statusInst = inst;
+  if (instKey === 'issueInst')  issueInst  = inst;
 
-    function drawChart(data) {
-        const labels = Object.keys(data);
-        const values = Object.values(data);
-        const total = values.reduce((a, b) => a + b, 0);
-        const colors = labels.map(l => colorMap[l] || "#94a3b8");
+  // Legend
+  const leg = document.getElementById(legendId);
+  leg.style.display = 'flex';
+  leg.innerHTML = labels.map((l, i) => {
+    const pct = total ? ((values[i] / total) * 100).toFixed(1) : 0;
+    return '<div class="li">'
+      + '<div class="ll"><div class="ld" style="background:' + colors[i] + '"></div><span>' + l + '</span></div>'
+      + '<span class="lv">' + values[i] + ' <span style="color:#94a3b8;font-weight:400">(' + pct + '%)</span></span>'
+      + '</div>';
+  }).join('');
+}
 
-        document.getElementById("chartArea").innerHTML = '<canvas id="pieChart"></canvas>';
-        if (pieChartInstance) { pieChartInstance.destroy(); }
+function clearChart(divId, legendId) {
+  if (divId === 'statusChartDiv' && statusInst) { statusInst.destroy(); statusInst = null; }
+  if (divId === 'issueChartDiv'  && issueInst)  { issueInst.destroy();  issueInst = null;  }
+  document.getElementById(divId).innerHTML = '<div class="empty">No data for selected range.</div>';
+  document.getElementById(legendId).style.display = 'none';
+}
 
-        const ctx = document.getElementById('pieChart').getContext('2d');
-        pieChartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{ data: values, backgroundColor: colors, borderWidth: 3, borderColor: '#ffffff', hoverBorderWidth: 4 }]
-            },
-            options: {
-                cutout: '60%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const pct = total ? ((context.raw / total) * 100).toFixed(1) : 0;
-                                return ` ${context.label}: ${context.raw} (${pct}%)`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
+function downloadPDF() {
+  const btn = document.getElementById('pdfBtn');
+  btn.innerText = 'Generating...'; btn.disabled = true;
 
-        // Custom legend
-        const legend = document.getElementById("legend");
-        legend.style.display = "flex";
-        legend.innerHTML = labels.map((label, i) => {
-            const pct = total ? ((values[i] / total) * 100).toFixed(1) : 0;
-            return `<div class="legend-item">
-                <div class="legend-left">
-                    <div class="legend-dot" style="background:${colors[i]};"></div>
-                    <span>${label}</span>
-                </div>
-                <span class="legend-val">${values[i]} <span style="color:#94a3b8; font-weight:400;">(${pct}%)</span></span>
-            </div>`;
-        }).join('');
-    }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-    function showEmptyChart() {
-        if (pieChartInstance) { pieChartInstance.destroy(); pieChartInstance = null; }
-        document.getElementById("chartArea").innerHTML = `<div class="chart-empty"><span class="emoji"></span>No data for selected range.</div>`;
-        document.getElementById("legend").style.display = "none";
-    }
+  const fromDisp = document.getElementById('dtFrom').value.replace('T',' ');
+  const toDisp = document.getElementById('dtTo').value.replace('T',' ');
+
+  // Header bar
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, 297, 22, 'F');
+  doc.setFillColor(230, 57, 70);
+  doc.rect(10, 5, 12, 12, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.text('RA', 16, 13, { align:'center' });
+  doc.setFontSize(14); doc.text('RoadAssist', 26, 13);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.setTextColor(148,163,184);
+  doc.text('Analytics Report  |  ' + fromDisp + '  to  ' + toDisp, 297-10, 13, { align:'right' });
+
+  // Summary stats
+  const rows = document.querySelectorAll('#atbl tbody tr');
+  let pending=0, accepted=0, completed=0;
+  rows.forEach(r => {
+    const badge = r.querySelector('.badge');
+    if (!badge) return;
+    const s = badge.innerText.trim();
+    if (s === 'Pending') pending++;
+    else if (s === 'Accepted') accepted++;
+    else if (s === 'Completed') completed++;
+  });
+  const total = pending + accepted + completed;
+
+  doc.setTextColor(15,23,42);
+  doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text('Summary', 10, 32);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.setFillColor(244,246,249);
+  const stats = [['Total Requests', total], ['Pending', pending], ['Accepted', accepted], ['Completed', completed]];
+  stats.forEach((s, i) => {
+    doc.rect(10 + i*60, 36, 55, 14, 'F');
+    doc.setTextColor(100,116,139); doc.setFontSize(8);
+    doc.text(s[0], 12 + i*60, 42);
+    doc.setTextColor(15,23,42); doc.setFontSize(13); doc.setFont('helvetica','bold');
+    doc.text(String(s[1]), 12 + i*60, 48);
+    doc.setFont('helvetica','normal');
+  });
+
+  // Table
+  doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.setTextColor(15,23,42);
+  doc.text('Request Details', 10, 62);
+
+  const tableData = [];
+  rows.forEach(r => {
+    const cells = r.querySelectorAll('td');
+    if (cells.length < 7) return;
+    tableData.push([
+      cells[0].innerText, cells[1].innerText, cells[2].innerText,
+      cells[3].innerText, cells[4].innerText, cells[5].querySelector('.badge')?.innerText || '',
+      cells[6].innerText
+    ]);
+  });
+
+  doc.autoTable({
+    startY: 65,
+    head: [['ID','Customer','Phone','Vehicle','Issue','Status','Submitted (IST)']],
+    body: tableData,
+    styles: { fontSize: 8, cellPadding: 3 },
+    headStyles: { fillColor: [15,23,42], textColor: [148,163,184], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [248,250,252] },
+    columnStyles: { 0:{cellWidth:14}, 1:{cellWidth:28}, 2:{cellWidth:24}, 3:{cellWidth:28}, 4:{cellWidth:50}, 5:{cellWidth:22}, 6:{cellWidth:40} },
+    margin: { left:10, right:10 }
+  });
+
+  // Footer
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(148,163,184);
+    doc.text('Generated by RoadAssist  |  Page ' + i + ' of ' + pageCount, 148.5, doc.internal.pageSize.height - 6, { align:'center' });
+  }
+
+  const fileName = 'RoadAssist_Report_' + fromDisp.replace(/[: ]/g,'_') + '.pdf';
+  doc.save(fileName);
+  btn.innerText = 'Download PDF Report'; btn.disabled = false;
+}
 </script>
 </body>
 </html>
